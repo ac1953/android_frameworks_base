@@ -879,14 +879,23 @@ status_t Layer::BufferManager::initEglImage(EGLDisplay dpy,
     if (index >= 0) {
         if (!mFailover) {
             {
-               // Without that lock, there is a chance of race condition
-               // where while composing a specific index, requestBuf
-               // with the same index can be executed and touch the same data
-               // that is being used in initEglImage.
-               // (e.g. dirty flag in texture)
-               Mutex::Autolock _l(mLock);
-               Image& texture(mBufferData[index].texture);
-               err = mTextureManager.initEglImage(&texture, dpy, buffer);
+                // Without that lock, there is a chance of race condition
+                // where while composing a specific index, requestBuf
+                // with the same index can be executed and touch the same data
+                // that is being used in initEglImage.
+                // (e.g. dirty flag in texture)
+                Mutex::Autolock _l(mLock);
+                Image& texture(mBufferData[index].texture);
+
+                // some legitimate app uses eight (forbidden by Android rules) as pixel format code 
+                if (buffer->format == HAL_PIXEL_FORMAT_UNDEFINED_8888) {
+                    // warning message
+                    LOGW("Warning: requested an invalid pixel format [0x%x] - Assumed HAL_PIXEL_FORMAT_RGBA_8888",buffer->format);
+
+                    // to avoid errors, we assume the format is 8bpp (32 bits) 
+                    buffer->format = HAL_PIXEL_FORMAT_RGBA_8888;
+                }
+                err = mTextureManager.initEglImage(&texture, dpy, buffer);
             }
             // if EGLImage fails, we switch to regular texture mode, and we
             // free all resources associated with using EGLImages.
