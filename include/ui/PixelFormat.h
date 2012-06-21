@@ -74,6 +74,9 @@ enum {
     // pixelflinger/format.h
 };
 
+/* 0x8 - 0xFF range is unavailable */
+#define HAL_PIXEL_FORMAT_UNDEFINED_8888     8
+
 typedef int32_t PixelFormat;
 
 struct PixelFormatInfo
