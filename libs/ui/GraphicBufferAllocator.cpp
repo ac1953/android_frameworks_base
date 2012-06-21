@@ -91,6 +91,15 @@ status_t GraphicBufferAllocator::alloc(uint32_t w, uint32_t h, PixelFormat forma
     // we have a h/w allocator and h/w buffer is requested
     status_t err; 
     
+    // some legitimate app uses eight (forbidden by Android rules) as pixel format code 
+    if (format == HAL_PIXEL_FORMAT_UNDEFINED_8888) {
+      // warning message
+      LOGW("Warning: requested an invalid pixel format [0x%x] - Assumed HAL_PIXEL_FORMAT_RGBA_8888",format);
+
+      // to avoid errors, we assume the format is 8bpp (32 bits) 
+      format = HAL_PIXEL_FORMAT_RGBA_8888;
+    }
+
     err = mAllocDev->alloc(mAllocDev, w, h, format, usage, handle, stride);
 
     LOGW_IF(err, "alloc(%u, %u, %d, %08x, ...) failed %d (%s)",
